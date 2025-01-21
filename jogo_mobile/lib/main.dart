@@ -24,12 +24,24 @@ class WordSearchScreen extends StatefulWidget {
 }
 
 class _WordSearchScreenState extends State<WordSearchScreen> {
-  final int gridSize = 16; // Tamanho do grid: 16x16
-  final List<String> words = ['FLUTTER', 'DART', 'CODIGO', 'APP', 'MOBILE', 'DESIGN', 'LOGIC', 'FRONTEND'];
+  final int gridRows = 14; // 14 linhas
+  final int gridColumns = 40; // 40 colunas
+  final List<String> words = [
+    'ANGELO',
+    'CAROL',
+    'CODIGO',
+    'APP',
+    'MOBILE',
+    'DESENVOLVER',
+    'LOGICA',
+    'JOGO',
+    'PALAVRAS',
+  ];
   late List<List<String>> grid;
   List<List<int>> selectedPositions = [];
   List<String> foundWords = [];
   List<List<List<int>>> foundLettersPositions = []; // Armazena as posições das palavras encontradas
+  bool isTitleHovered = false; // Controla a animação do título
 
   @override
   void initState() {
@@ -38,7 +50,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   }
 
   void _generateGrid() {
-    grid = List.generate(gridSize, (_) => List.filled(gridSize, ' ', growable: false));
+    grid = List.generate(gridRows, (_) => List.filled(gridColumns, ' ', growable: false));
     _placeWords();
     _fillEmptySpaces();
   }
@@ -60,8 +72,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
       bool placed = false;
 
       while (!placed) {
-        int row = random.nextInt(gridSize);
-        int col = random.nextInt(gridSize);
+        int row = random.nextInt(gridRows);
+        int col = random.nextInt(gridColumns);
         var direction = directions[random.nextInt(directions.length)];
 
         if (_canPlaceWord(word, row, col, direction)) {
@@ -77,10 +89,12 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
       int newRow = row + i * direction[0];
       int newCol = col + i * direction[1];
 
-      if (newRow < 0 || newRow >= gridSize || newCol < 0 || newCol >= gridSize) {
+      // Certifica-se de que não sairá do grid
+      if (newRow < 0 || newRow >= gridRows || newCol < 0 || newCol >= gridColumns) {
         return false;
       }
 
+      // Certifica-se de que não haja conflito de letras
       if (grid[newRow][newCol] != ' ' && grid[newRow][newCol] != word[i]) {
         return false;
       }
@@ -99,8 +113,8 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
   void _fillEmptySpaces() {
     var random = Random();
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    for (int i = 0; i < gridSize; i++) {
-      for (int j = 0; j < gridSize; j++) {
+    for (int i = 0; i < gridRows; i++) {
+      for (int j = 0; j < gridColumns; j++) {
         if (grid[i][j] == ' ') {
           grid[i][j] = letters[random.nextInt(letters.length)];
         }
@@ -120,23 +134,20 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
           .map((pos) => grid[pos[0]][pos[1]])
           .join('');
 
-      // Validação para só colorir a palavra encontrada
       if (words.contains(currentWord) && !foundWords.contains(currentWord)) {
         foundWords.add(currentWord);
-        foundLettersPositions.add(List.from(selectedPositions)); // Adiciona as posições da palavra encontrada
+        foundLettersPositions.add(List.from(selectedPositions)); // Adiciona a palavra encontrada
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Encontrou a palavra: $currentWord')),
         );
 
-        // Limpa seleção após encontrar uma palavra
         selectedPositions.clear();
 
         // Verifica se todas as palavras foram encontradas
         if (foundWords.length == words.length) {
           _showWinDialog();
         }
-      } else if (selectedPositions.length >= gridSize) {
-        // Se a seleção exceder o tamanho permitido, limpa-a
+      } else if (selectedPositions.length > max(gridRows, gridColumns)) {
         selectedPositions.clear();
       }
     });
@@ -176,48 +187,100 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Reduz o tamanho do quadrado proporcionalmente para que tudo caiba no grid expandido.
-    double gridSquareSize = MediaQuery.of(context).size.width / gridSize;
+    // Calcula o tamanho do quadrado de forma responsiva
+    double gridSquareSize = MediaQuery.of(context).size.width / gridColumns;
 
     return Scaffold(
-      appBar: AppBar(title: Text('Caça-Palavras')),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        toolbarHeight: 100,
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: MouseRegion(
+          onEnter: (_) {
+            setState(() {
+              isTitleHovered = true;
+            });
+          },
+          onExit: (_) {
+            setState(() {
+              isTitleHovered = false;
+            });
+          },
+          child: Center(
+            child: AnimatedContainer(
+              duration: Duration(milliseconds: 300),
+              padding: EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+              decoration: BoxDecoration(
+                color: isTitleHovered ? Colors.blueAccent : Colors.lightBlue,
+                borderRadius: BorderRadius.circular(25),
+                boxShadow: [
+                  if (isTitleHovered)
+                    BoxShadow(
+                      color: Colors.blueAccent.withOpacity(0.4),
+                      spreadRadius: 4,
+                      blurRadius: 10,
+                    ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Caça-Palavras',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'By: Ângelo e Carol',
+                    style: TextStyle(
+                      color: Colors.white70,
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
       body: Column(
         children: [
-          Expanded(
+          Flexible(
             child: GridView.builder(
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: gridSize,
+                crossAxisCount: gridColumns,
               ),
-              itemCount: gridSize * gridSize,
+              itemCount: gridRows * gridColumns,
               itemBuilder: (context, index) {
-                int row = index ~/ gridSize;
-                int col = index % gridSize;
+                int row = index ~/ gridColumns;
+                int col = index % gridColumns;
 
-                // Verifica se a célula é parte de uma palavra encontrada
                 bool isFound = foundLettersPositions.any((positions) =>
                     positions.any((pos) => pos[0] == row && pos[1] == col));
-
-                // Verifica se a célula está sendo temporariamente selecionada
                 bool isSelected = selectedPositions
                     .any((pos) => pos[0] == row && pos[1] == col);
 
                 return GestureDetector(
                   onTap: () => _onLetterTap(row, col),
                   child: Container(
-                    margin: EdgeInsets.all(1),
+                    margin: EdgeInsets.all(0.5),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? Colors.green // Temporariamente selecionado
-                          : (isFound ? Colors.orange : Colors.blueAccent), // Parte de palavra encontrada
-                      borderRadius: BorderRadius.circular(5),
+                          ? Colors.green
+                          : (isFound ? Colors.orange : Colors.blueAccent),
+                      borderRadius: BorderRadius.circular(2),
                     ),
-                    width: gridSquareSize,
-                    height: gridSquareSize,
                     child: Center(
                       child: Text(
                         grid[row][col],
                         style: TextStyle(
-                          fontSize: gridSquareSize / 2.5, // Fonte proporcional ao tamanho do bloco
+                          fontSize: gridSquareSize / 2.5,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
@@ -229,15 +292,37 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
             ),
           ),
           Padding(
-            padding: EdgeInsets.all(8.0),
-            child: Text(
-              'Palavras para encontrar: ${words.join(", ")}',
-              style: TextStyle(fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
+            padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+            child: Column(children: [
+              LinearProgressIndicator(
+                value: foundWords.length / words.length,
+                backgroundColor: Colors.grey[300],
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+              ),
+              SizedBox(height: 10),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: words.map((word) {
+                  bool isFound = foundWords.contains(word);
+                  return Text(
+                    word,
+                    style: TextStyle(
+                      decoration: isFound ? TextDecoration.lineThrough : null,
+                      color: isFound ? Colors.green : Colors.black,
+                      fontSize: 16,
+                    ),
+                  );
+                }).toList(),
+              ),
+            ]),
           ),
           ElevatedButton(
             onPressed: _clearSelection,
+            style: ElevatedButton.styleFrom(
+              padding: EdgeInsets.symmetric(horizontal: 25, vertical: 10),
+              textStyle: TextStyle(fontSize: 16),
+            ),
             child: Text('Limpar Seleção'),
           ),
         ],
