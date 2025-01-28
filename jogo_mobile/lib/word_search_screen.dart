@@ -65,7 +65,7 @@ class _WordSearchScreenState extends State<WordSearchScreen> {
       }
 
       if (words.isEmpty) {
-        Future.delayed(Duration(milliseconds: 500), () {
+        Future.delayed(Duration(milliseconds: 4000), () {
           _showWinnerDialog();
         });
       }
