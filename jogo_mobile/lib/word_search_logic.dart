@@ -52,3 +52,13 @@ List<List<String>> generateGrid(int gridHeight, int gridWidth, List<String> word
 
   return grid;
 }
+
+List<String> getWordsForDifficulty(String difficulty) {
+  if (difficulty == 'Facil') {
+    return ['SOL', 'LUZ', 'MAR', 'FLOR', 'ARCO'];
+  } else if (difficulty == 'Medio') {
+    return ['CAVALO', 'TIGRE', 'CACHORRO', 'GATO', 'URSO', 'RAPOSA', 'LOBO'];
+  } else {
+    return ['ELEFANTE', 'DINOSSAURO', 'BORBOLETA', 'CROCODILO', 'GIRAFA', 'TARTARUGA', 'PANTERA', 'GORILA', 'LEOPARDO'];
+  }
+}

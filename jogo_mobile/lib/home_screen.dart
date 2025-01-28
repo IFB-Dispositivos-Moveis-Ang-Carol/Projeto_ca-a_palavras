@@ -57,24 +57,24 @@ class HomeScreen extends StatelessWidget {
           children: [
             SizedBox(height: 5), // Reduzindo espaço entre o título e a seleção de dificuldade
             Text(
-              'Escolha o nível de dificuldade',
+              'Escolha o modo de jogo',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 5), // Reduzindo espaço extra
             ElevatedButton(
-              onPressed: () => _startGame(context, 'Facil'),
+              onPressed: () => _chooseGameMode(context, 'Facil'),
               child: Text('Fácil',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             ),
             SizedBox(height: 5), // Aproximando botões
             ElevatedButton(
-              onPressed: () => _startGame(context, 'Medio'),
+              onPressed: () => _chooseGameMode(context, 'Medio'),
               child: Text('Médio',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             ),
             SizedBox(height: 5), // Aproximando botões
             ElevatedButton(
-              onPressed: () => _startGame(context, 'Dificil'),
+              onPressed: () => _chooseGameMode(context, 'Dificil'),
               child: Text('Difícil',
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             ),
@@ -84,10 +84,36 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  void _startGame(BuildContext context, String difficulty) {
+  void _chooseGameMode(BuildContext context, String difficulty) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Modo de Jogo'),
+        content: Text('Escolha se deseja jogar sozinho ou com um amigo.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _startGame(context, difficulty, false);
+            },
+            child: Text('1 Jogador'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _startGame(context, difficulty, true);
+            },
+            child: Text('2 Jogadores'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _startGame(BuildContext context, String difficulty, bool isTwoPlayers) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => WordSearchScreen(difficulty)),
+      MaterialPageRoute(builder: (context) => WordSearchScreen(difficulty, isTwoPlayers)),
     );
   }
 }
